@@ -44,7 +44,24 @@
   // this size, no CSS scaling/cropping involved.
   const PRINT_DPI = 300;
   const PRINT_PX_W = Math.round(5 / 2.54 * PRINT_DPI);
-  const PRINT_PX_H = Math.round(15 / 2.54 * PRINT_DPI);
+  // Keep the pixel canvas at an exact 1:3 ratio. CSS controls the physical
+  // 50x150mm print size; using exactly 3x the width avoids even sub-pixel
+  // stretching when the browser maps the bitmap onto that physical size.
+  const PRINT_PX_H = PRINT_PX_W * 3;
+  const FRAME_ASPECT_RATIO = 1 / 3;
+  const FRAME_ASPECT_TOLERANCE = 0.005;
+
+  function assertPrintFrameRatio(image, frameName){
+    const ratio = image.naturalWidth / image.naturalHeight;
+    const ratioError = Math.abs(ratio - FRAME_ASPECT_RATIO) / FRAME_ASPECT_RATIO;
+    if (ratioError > FRAME_ASPECT_TOLERANCE){
+      throw new Error(
+        `Khung “${frameName}” có kích thước ${image.naturalWidth}×${image.naturalHeight}. ` +
+        'Khung phải có tỉ lệ 1:3 để in đúng 5×15 cm mà không bị bóp méo ' +
+        '(ví dụ 1200×3600 px).'
+      );
+    }
+  }
 
   const FILTERS = {
     none: 'none',
@@ -767,6 +784,7 @@
     if (!loaded){
       frameImgEl.src = placeholderFrame(frame.name, state.selectedShots.length);
     } else {
+      assertPrintFrameRatio(loaded, frame.name);
       frameImgEl.src = frame.image;
     }
 
@@ -852,21 +870,13 @@
       frameImg = await loadImage(placeholderFrame(frame.name, state.selectedShots.length));
     }
 
-    const nw = (frameImg && frameImg.naturalWidth) || 900;
-    const nh = (frameImg && frameImg.naturalHeight) || 2700;
+    assertPrintFrameRatio(frameImg, frame.name);
 
-    // DECISION: never crop the frame artwork, even if that means the
-    // height isn't pixel-perfect 15cm for a frame that isn't authored at
-    // exactly a 1:3 ratio. Width is locked to the real physical print width
-    // (5cm @ 300 DPI, the dimension that matters for cutting/feeding
-    // paper); height follows the frame's own aspect ratio so every sticker,
-    // logo and line of text always survives completely. The only way to
-    // ALSO get an exact 15cm height with zero cropping is to author the
-    // source frame PNG at precisely a 1:3 canvas ratio (e.g. 1000x3000px)
-    // — short of that, a slightly-off physical height is a much smaller
-    // problem than a print missing part of its own design.
+    // Every accepted frame is 1:3, so it can fill this 5x15cm canvas with
+    // one uniform scale. Photos are cover-cropped into their slots below;
+    // width and height are never scaled independently.
     const canvasW = PRINT_PX_W;
-    const canvasH = Math.round(canvasW * (nh / nw));
+    const canvasH = PRINT_PX_H;
 
     const canvas = document.createElement('canvas');
     canvas.width = canvasW;
@@ -986,9 +996,9 @@
       const style = pdoc.createElement('style');
       style.textContent =
         '@page{ size: A5 portrait; margin: 0; } ' +
-        'html, body{ margin: 0; padding: 0; background: #fff; } ' +
+        'html, body{ margin: 0; padding: 0; background: #fff; print-color-adjust: exact; -webkit-print-color-adjust: exact; } ' +
         '.sheet{ width: 148mm; display: flex; justify-content: center; gap: 4mm; margin: 15mm auto 0; } ' +
-        '.sheet img{ width: 50mm; height: auto; display: block; }';
+        '.sheet img{ width: 50mm; height: 150mm; object-fit: contain; display: block; background: #fff; }';
       pdoc.head.appendChild(style);
 
       const sheet = pdoc.createElement('div');
