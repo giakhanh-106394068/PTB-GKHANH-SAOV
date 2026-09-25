@@ -10,11 +10,19 @@ Khung mới và khung cũ sẽ xuất hiện chung trong một danh sách.
 Không cần sửa script.js khi thêm khung PNG mới.
 Không cần cài Node.js, không cần server và không có cửa sổ CMD.
 Khi chuyển sang laptop khác, hãy chép toàn bộ thư mục PTB GKHANH.
-Khung 1 có sẵn sẽ tự xuất hiện. Các khung bạn thêm cần chọn lại thư mục
-frames\3-photo sau khi đóng rồi mở lại trang.
+Các khung bạn thêm cần chọn lại thư mục frames\3-photo sau khi đóng rồi
+mở lại trang. Khung 1 cũ (1204 x 1795 px) sai tỉ lệ nên hệ thống sẽ bỏ qua;
+hãy thay nó bằng bản thiết kế tỉ lệ 1:3.
 
 Lưu ý:
 - Ba ô ảnh phải tách rời nhau.
 - Không tạo thêm vùng trong suốt lớn ngoài ba ô ảnh.
 - Mỗi ô ảnh không được chạm mép ngoài của PNG.
 - Ảnh PNG không được lớn hơn 36 megapixel.
+
+KÍCH THƯỚC KHUNG BẮT BUỘC
+--------------------------
+- Khung phải có tỉ lệ 1:3 để in đúng 5 x 15 cm mà không bị bóp méo.
+- Kích thước khuyên dùng: 1200 x 3600 px.
+- Có thể dùng 1000 x 3000 px hoặc 900 x 2700 px.
+- Hệ thống sẽ bỏ qua khung sai tỉ lệ và hiển thị lý do trên màn hình chọn khung.

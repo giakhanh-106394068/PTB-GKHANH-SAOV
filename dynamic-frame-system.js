@@ -4,6 +4,10 @@
   const EXPECTED_PHOTO_COUNT = 3;
   const TRANSPARENT_ALPHA = 24;
   const MAX_OUTPUT_PIXELS = 36000000;
+  const PRINT_WIDTH_PX = 591;
+  const PRINT_HEIGHT_PX = PRINT_WIDTH_PX * 3;
+  const FRAME_ASPECT_RATIO = 1 / 3;
+  const FRAME_ASPECT_TOLERANCE = 0.005;
   const slotCache = new Map();
   const bundledFrames = Array.isArray(window.BundledDynamicFrames)
     ? window.BundledDynamicFrames.map(frame => ({ ...frame, source: 'dynamic' }))
@@ -80,6 +84,19 @@
       image.onerror = () => reject(new Error('Không thể mở ảnh khung PNG'));
       image.src = source;
     });
+  }
+
+  function assertPrintRatio(image, frameName){
+    const ratio = image.naturalWidth / image.naturalHeight;
+    const ratioError = Math.abs(ratio - FRAME_ASPECT_RATIO) / FRAME_ASPECT_RATIO;
+    if (ratioError > FRAME_ASPECT_TOLERANCE){
+      throw new Error(
+        (frameName || 'Khung ảnh') + ' có kích thước ' +
+        image.naturalWidth + '×' + image.naturalHeight +
+        '. Khung phải có tỉ lệ 1:3 để in đúng 5×15 cm mà không bị bóp méo '
+        + '(ví dụ 1200×3600 px).'
+      );
+    }
   }
 
   function sortSlotsInReadingOrder(slots){
@@ -204,6 +221,7 @@
     if (overlay.naturalWidth * overlay.naturalHeight > MAX_OUTPUT_PIXELS){
       throw new Error('Ảnh khung quá lớn; hãy dùng ảnh dưới 36 megapixel');
     }
+    assertPrintRatio(overlay, frame.name);
 
     const prepared = {
       overlay,
@@ -284,9 +302,13 @@
       renderCards();
 
       if (invalidCount > 0){
+        const firstInvalid = results.find(result => result.status === 'rejected');
+        const reason = firstInvalid && firstInvalid.reason && firstInvalid.reason.message
+          ? ' ' + firstInvalid.reason.message
+          : '';
         setStatus(
           'Đã nhận ' + availableFrames.length + ' khung hợp lệ; bỏ qua ' +
-          invalidCount + ' khung không có đúng 3 ô trong suốt.',
+          invalidCount + ' khung không hợp lệ.' + reason,
           true
         );
       } else if (availableFrames.length > 0){
@@ -425,13 +447,34 @@
     const prepared = await prepareFrame(frame);
     const shotImages = await Promise.all(shots.map(loadImage));
     const canvas = document.createElement('canvas');
-    canvas.width = prepared.width;
-    canvas.height = prepared.height;
+    canvas.width = PRINT_WIDTH_PX;
+    canvas.height = PRINT_HEIGHT_PX;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Trình duyệt không thể dựng ảnh cuối');
 
-    shotImages.forEach((image, index) => drawCover(context, image, prepared.slots[index]));
-    context.drawImage(prepared.overlay, 0, 0);
+    // Scale the whole 1:3 frame uniformly. Photo slots use the same transform,
+    // so neither the artwork nor the people in the photos are stretched.
+    const scale = Math.min(
+      PRINT_WIDTH_PX / prepared.width,
+      PRINT_HEIGHT_PX / prepared.height
+    );
+    const outputWidth = prepared.width * scale;
+    const outputHeight = prepared.height * scale;
+    const offsetX = (PRINT_WIDTH_PX - outputWidth) / 2;
+    const offsetY = (PRINT_HEIGHT_PX - outputHeight) / 2;
+
+    context.fillStyle = '#fff';
+    context.fillRect(0, 0, PRINT_WIDTH_PX, PRINT_HEIGHT_PX);
+    shotImages.forEach((image, index) => {
+      const sourceSlot = prepared.slots[index];
+      drawCover(context, image, {
+        x: offsetX + sourceSlot.x * scale,
+        y: offsetY + sourceSlot.y * scale,
+        width: sourceSlot.width * scale,
+        height: sourceSlot.height * scale
+      });
+    });
+    context.drawImage(prepared.overlay, offsetX, offsetY, outputWidth, outputHeight);
     return canvas.toDataURL('image/png');
   }
 
