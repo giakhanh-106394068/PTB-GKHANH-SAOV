@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAOV Photobooth</title>
+<script src="./vendor/html2canvas.min.js"></script>
+<link rel="stylesheet" href="./css/booth.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="marquee">
+    <div class="brand">
+      <span class="bulb"></span>
+      <h1>SAOV</h1>
+    </div>
+    <div class="coin">
+      <b id="clock">--:--</b>
+      photobooth
+    </div>
+  </header>
+
+  <!-- SCREEN 1: START -->
+  <section class="screen active" id="screen-start">
+    <div class="start-grid">
+      <div class="start-copy glass-panel">
+        <p class="tagline">Gương mặt lên khung</p>
+        <h2>Chụp <em id="startShotCount" style="color:var(--brand)">4</em> ảnh<br>trong một dải.</h2>
+        <p>Chọn số khung và nhịp chụp, mở camera, thử filter rồi để SAOV Photobooth tự ghi lại trọn lượt ảnh.</p>
+
+        <div class="setup-group">
+          <p class="setup-label">Số khung ảnh</p>
+          <div class="strip-select" id="shotCountSelect">
+            <button data-count="1">1 khung</button>
+            <button data-count="3">3 khung</button>
+            <button data-count="4" class="on">4 khung</button>
+            <button data-count="6">6 khung</button>
+          </div>
+        </div>
+
+        <div class="setup-group">
+          <p class="setup-label">Khoảng cách giữa mỗi ảnh</p>
+          <div class="strip-select timing-select" id="captureDelaySelect">
+            <button data-delay="3">3 giây</button>
+            <button data-delay="5" class="on">5 giây</button>
+            <button data-delay="7">7 giây</button>
+          </div>
+        </div>
+
+        <div class="setup-group camera-settings">
+          <label class="setup-label" for="cameraSelect">Camera</label>
+          <select class="camera-select" id="cameraSelect">
+            <option value="">Camera mặc định</option>
+          </select>
+          <label class="mirror-toggle" for="mirrorCameraToggle">
+            <input id="mirrorCameraToggle" type="checkbox" checked>
+            <span>Lật ảnh như gương khi xem và khi lưu</span>
+          </label>
+        </div>
+
+        <button class="btn-primary" id="btnStart" style="margin-top: 18px;">Mở cabin</button>
+        <p style="margin-top:24px; font-size:12px; font-weight:600; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.35px;" id="camHint">SAOV Photobooth sẽ xin quyền dùng camera của bạn.</p>
+      </div>
+
+      <div class="curtain-frame">
+        <div class="curtain-inner">
+          <img id="startPreviewImg" src="./frames/4-photo/3.png" alt="Khung photobooth mẫu">
+          <div id="startPreviewPlaceholder" style="display:none;"></div>
+          <div class="curtain-caption">ẢNH MẪU SẼ HIỆN Ở ĐÂY</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: CAPTURE -->
+  <section class="screen" id="screen-capture">
+    <div class="booth" id="captureBooth">
+      <div class="stage" id="stage">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="flash-overlay" id="flashOverlay"></div>
+        <div class="countdown-num" id="countdownNum">3</div>
+        <div class="shot-badge"><span class="rec-dot"></span>Khung <b id="shotIndex">1</b> / <span id="shotTotal">4</span></div>
+        <div class="gesture-center-guide hidden" id="gestureCenterGuide" aria-hidden="true">
+          <span>Giơ 1 ngón ở đây · giữ 3 giây</span>
+        </div>
+      </div>
+
+      <div class="side-panel glass-panel">
+        <div class="panel-block filter-panel" id="filterPanel">
+          <h3>Chọn bộ lọc</h3>
+          <div class="filter-list" id="filterList">
+            <button data-filter="none" class="on"><span>Nguyên bản</span><span class="swatch" style="background:#999"></span></button>
+            <button data-filter="mono"><span>Đen trắng</span><span class="swatch" style="background:#555"></span></button>
+            <button data-filter="warm"><span>Ấm hoài cổ</span><span class="swatch" style="background:#c98a45"></span></button>
+            <button data-filter="cool"><span>Lạnh xanh</span><span class="swatch" style="background:#3d7a8c"></span></button>
+            <button data-filter="high"><span>Tương phản cao</span><span class="swatch" style="background:#2a2a2a"></span></button>
+            <button data-filter="blur"><span>Mờ mịn</span><span class="swatch" style="background:#aaa"></span></button>
+            <button data-filter="bright"><span>Sáng rõ</span><span class="swatch" style="background:#fff"></span></button>
+            <button data-filter="dark"><span>Tối huyền</span><span class="swatch" style="background:#1a1a1a"></span></button>
+            <button data-filter="sepia"><span>Sepia cổ</span><span class="swatch" style="background:#8b6f47"></span></button>
+            <button data-filter="invert"><span>Đảo màu</span><span class="swatch" style="background:#66f"></span></button>
+            <button data-filter="saturate"><span>Bão hoà cao</span><span class="swatch" style="background:#f33"></span></button>
+            <button data-filter="cool2"><span>Lạnh tím</span><span class="swatch" style="background:#5a4a9e"></span></button>
+            <button data-filter="retro"><span>Retro phim</span><span class="swatch" style="background:#8b7355"></span></button>
+            <button data-filter="vivid"><span>Sống động</span><span class="swatch" style="background:#f60"></span></button>
+            <button data-filter="dreamy"><span>Mơ màng</span><span class="swatch" style="background:#d4a5d4"></span></button>
+          </div>
+        </div>
+
+        <div class="panel-block shots-panel hidden" id="shotsPanel">
+          <div class="shots-heading">
+            <h3>Ảnh đã chụp</h3>
+            <span id="shotsProgress">0 / 4</span>
+          </div>
+          <div class="capture-summary">
+            <span>Filter <b id="confirmedFilterName">Nguyên bản</b></span>
+            <span>Nhịp <b id="confirmedDelay">5 giây</b></span>
+          </div>
+          <div class="thumbs" id="thumbs"></div>
+        </div>
+
+        <p class="capture-status" id="captureStatus">Chọn filter bạn muốn dùng cho toàn bộ lượt ảnh.</p>
+        <div class="gesture-panel hidden" id="gesturePanel" role="status" aria-live="polite">
+          <div class="gesture-heading">
+            <strong>AI gesture</strong>
+            <span>Xử lý trên máy</span>
+          </div>
+          <p id="gestureStatus">Đang chuẩn bị AI…</p>
+          <div class="gesture-progress" aria-hidden="true">
+            <span id="gestureProgress"></span>
+          </div>
+        </div>
+        <button class="btn-primary capture-cta" id="btnCapture">Xác nhận filter</button>
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+          <button class="btn-ghost hidden" id="btnChangeFilter" style="padding:8px 0;">Chọn lại filter</button>
+          <button class="btn-ghost" id="btnCancelBooth" style="padding:8px 0; margin-left:auto;">Thoát cabin</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2B: FRAME CUSTOMIZER -->
+  <section class="screen" id="screen-frame">
+    <div>
+      <div style="display:grid; gap:120px; align-items:start;">
+        <!-- Settings -->
+        <div style="display:flex; flex-direction:column; gap:60px;">
+          <div>
+            <h2 style="font-size:78px; font-weight:400; margin:0 0 48px; line-height:1.1; letter-spacing:-3.12px;">Thiết kế frame</h2>
+            <div class="panel-block">
+              <h3>Frame hệ thống</h3>
+              <div class="frame-template-list" id="frameTemplateList"></div>
+            </div>
+          </div>
+
+          <div class="panel-block ready-frame-panel">
+            <div class="ready-frame-heading">
+              <h3>Frame có sẵn · <span id="readyFrameCount">4 ảnh</span></h3>
+              <button class="ready-frame-reload" id="btnReloadReadyFrames" type="button">Quét lại</button>
+            </div>
+            <div class="ready-frame-list" id="readyFrameList"></div>
+            <p class="ready-frame-status" id="readyFrameStatus">Đang tìm frame PNG phù hợp…</p>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:60px;">
+            <div class="panel-block" id="frameColorPanel">
+              <h3>Màu nền</h3>
+              <div class="filter-list" id="frameColorList">
+                <button data-color="#e63946" class="on"><span>Đỏ Swinburne</span><span class="swatch" style="background:#e63946"></span></button>
+                <button data-color="#000000"><span>Đen</span><span class="swatch" style="background:#000000"></span></button>
+                <button data-color="#ffffff"><span>Trắng</span><span class="swatch" style="background:#ffffff"></span></button>
+                <button data-color="#1d3557"><span>Xanh Navy</span><span class="swatch" style="background:#1d3557"></span></button>
+              </div>
+            </div>
+
+            <div class="panel-block" id="frameLogoPanel">
+              <h3>Logo</h3>
+              <div class="filter-list">
+                <button data-logo="life" class="on"><span>Swinburne & SaoV</span></button>
+                <button data-logo="none"><span>Không có logo</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-block" id="frameEventPanel">
+            <h3>Thông tin sự kiện</h3>
+            <label class="frame-field hidden" id="frameHeaderGroup">
+              <span>Tiêu đề trên cùng</span>
+              <input class="frame-input" type="text" id="frameHeaderText" placeholder="PHOTOBOOTH">
+            </label>
+            <label class="frame-field">
+              <span>Tên sự kiện</span>
+              <input class="frame-input" type="text" id="frameEventName" placeholder="Swinburne Vietnam">
+            </label>
+            <label class="frame-field">
+              <span>Mô tả</span>
+              <input class="frame-input" type="text" id="frameEventDesc" placeholder="K7 Students">
+            </label>
+            <label class="frame-field hidden" id="frameProgramGroup">
+              <span>Tên ngành / câu kết</span>
+              <input class="frame-input" type="text" id="frameProgramText" placeholder="COMPUTER SCIENCE">
+            </label>
+            <label class="frame-field">
+              <span>Năm</span>
+              <input class="frame-input" type="text" id="frameEventYear" placeholder="2026">
+            </label>
+          </div>
+
+          <button class="btn-primary" id="btnApplyFrame" style="width:auto; align-self:flex-start;">Áp dụng frame</button>
+        </div>
+
+        <!-- Preview -->
+        <div>
+          <div id="framePreview" class="frame-preview frame-preview--saov">
+            <canvas class="ready-frame-preview-canvas hidden" id="readyFramePreviewCanvas" aria-label="Xem trước frame có sẵn"></canvas>
+            <img class="frame-preview-mascot frame-preview-mascot--left" src="assets/computer-science-mascot.png" alt="" aria-hidden="true">
+            <img class="frame-preview-mascot frame-preview-mascot--right" src="assets/computer-science-mascot.png" alt="" aria-hidden="true">
+            <div class="frame-preview-header" id="framePreviewHeader">PHOTOBOOTH</div>
+            <div class="frame-preview-slots" id="framePreviewSlots" aria-hidden="true"></div>
+            <div class="frame-preview-copy">
+              <div id="framePreviewTitle">Swinburne Vietnam</div>
+              <div id="framePreviewDesc">K7 Students</div>
+            </div>
+            <div class="frame-preview-program" id="framePreviewProgram">COMPUTER SCIENCE</div>
+            <div class="frame-preview-bottom">
+              <span id="framePreviewYear">2026</span>
+              <img id="framePreviewLogo" src="assets/saov-logo-white.png" alt="SAOV">
+            </div>
+          </div>
+          <p class="frame-preview-note" id="framePreviewNote">Preview thay đổi theo mẫu khung, số ảnh và nội dung bạn nhập.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: REVIEW / PRINT -->
+  <section class="screen" id="screen-review">
+    <div class="review-grid">
+      <div id="printArea">
+        <!-- strip photos injected here -->
+        <div class="strip-footer" id="stripFooter">SAOV PHOTOBOOTH <span class="dateline" id="stripDate"></span></div>
+      </div>
+
+      <div class="review-actions glass-panel">
+        <h2>Dải ảnh của bạn</h2>
+        <p>Xem lại trước khi in. Có thể chụp lại toàn bộ nếu chưa ưng ý.</p>
+        <div class="review-note border" id="autoSaveStatus">Ảnh của lượt chụp sẽ được tự lưu vào folder captures.</div>
+
+        <div class="row" style="margin-top:24px;">
+          <button class="btn-primary" id="btnPrint">In ảnh 🖨️</button>
+          <button class="btn-ghost" id="btnDownload">Tải PNG</button>
+        </div>
+        <div class="row">
+          <button class="btn-ghost" id="btnEditFrame">Sửa frame</button>
+          <button class="btn-ghost" id="btnRetake">Chụp lại</button>
+        </div>
+        <div class="row">
+          <button class="btn-ghost hidden" id="btnRetrySave">Thử lưu final lại</button>
+          <button class="btn-ghost hidden" id="btnOpenCaptureFolder">Mở folder ảnh</button>
+        </div>
+
+        <div class="review-note" style="margin-top:24px;">
+          Mẹo in: nếu dùng máy in ảnh khổ 2×6" (như DNP, Canon Selphy dải), chọn khổ giấy tương ứng trong hộp thoại in để có kết quả sát viền nhất.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="stub">
+    <span>est. 2026 · one booth, one strip</span>
+    <span id="footShots">0 khung đã lưu</span>
+  </footer>
+</div>
+
+<canvas id="workCanvas" class="hidden"></canvas>
+
+<script src="./js/system-frames.js?v=20261113-saov-brand"></script>
+<script src="./js/ready-frames.js?v=20261113-saov-brand"></script>
+<script type="module" src="./js/gesture-control.js?v=20261113-pointing-hold"></script>
+<script src="./js/app.js?v=20261113-pointing-hold"></script>
+</body>
+</html>
