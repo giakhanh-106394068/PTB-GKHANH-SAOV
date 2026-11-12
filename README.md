@@ -1,69 +1,50 @@
 # SAOV Photobooth
 
-Bản phát triển được tách từ `ptb.txt`. File gốc trong Downloads vẫn được giữ nguyên.
+I built this web photobooth for my club's booth at our school's Mid-Autumn event. About 100 visitors used it during the event. A guest chooses the number of photos and the delay, confirms a filter, then holds up one finger for three seconds to start the session. The app takes the photos automatically and combines them with the selected frame.
 
-## Cấu trúc
+## What it does
 
-```text
-ptbsystem/
-├── index.html
-├── css/
-│   └── booth.css
-├── js/
-│   ├── app.js
-│   ├── gesture-control.js
-│   ├── system-frames.js
-│   └── ready-frames.js
-├── mediapipe/
-│   ├── models/
-│   ├── wasm/
-│   └── vision_bundle.mjs
-├── frames/
-│   ├── 1-photo/
-│   ├── 3-photo/
-│   ├── 4-photo/
-│   └── 6-photo/
-├── assets/
-│   ├── images/
-│   └── sounds/
-├── vendor/
-│   └── html2canvas.min.js
-└── server.mjs
-```
+- Supports layouts of 1, 3, 4 or 6 photos. The camera preview follows the aspect ratio of each photo slot.
+- Provides delays of 3, 5 or 7 seconds between shots.
+- Lets the guest preview and confirm a filter before the session begins.
+- Starts through a three-second raised-finger gesture, with a manual start button available as a backup.
+- Fills the photo grid during the session and saves every captured image with a combined `final.png`.
+- Includes editable SAOV Club and Computer Science frame templates, along with support for custom PNG frames.
 
-## Chạy local
+## How it works
 
-Mở terminal tại thư mục này và chạy:
+1. The browser opens the selected webcam.
+2. MediaPipe Gesture Recognizer detects the `Pointing_Up` gesture in the camera feed.
+3. Holding the gesture in the centre guide for three seconds starts the countdown. Gesture detection then stops for the rest of the session.
+4. The app captures each photo at the selected interval until the layout is full.
+5. html2canvas combines the photos and frame into `final.png`.
+6. The local Node.js server saves the individual photos and final image in a session folder.
 
-```powershell
+Gesture recognition runs in the browser on the user's machine. Camera frames are not sent to an external service. MediaPipe, its WASM files and the gesture model are stored in `mediapipe/`, while html2canvas is stored in `vendor/`. Once the project is downloaded, the photobooth can run without an internet connection.
+
+## Tech stack
+
+- HTML and CSS
+- Vanilla JavaScript
+- Node.js local server
+- MediaPipe Tasks Vision Gesture Recognizer
+- html2canvas
+
+## Run locally
+
+You need Node.js, a webcam and a modern browser.
+
+On Windows, double-click `START-PHOTOBOOTH.cmd`. It starts the local server on an available port and opens the photobooth in the browser.
+
+You can also start the server manually:
+
+```bash
 node server.mjs
 ```
 
-Sau đó mở `http://127.0.0.1:4174` trong trình duyệt. Dùng localhost giúp quyền camera hoạt động ổn định hơn so với mở trực tiếp file HTML.
+Then open `http://127.0.0.1:4174`. Running on localhost allows the browser to request camera access reliably.
 
-## Trạng thái hiện tại
-
-Giai đoạn 2 đã bổ sung:
-
-- Chọn 1, 3, 4 hoặc 6 khung ảnh.
-- Camera hiển thị và chụp đúng tỷ lệ ô ảnh: 2:3 cho 1 ảnh, 4:3 cho 3/4/6 ảnh.
-- Chọn khoảng cách tự động 3, 5 hoặc 7 giây.
-- Mở camera rồi thử và xác nhận filter.
-- Tự nhận danh sách camera để chọn webcam phù hợp.
-- Có tùy chọn lật preview và ảnh lưu giống hình trong gương.
-- Sau khi xác nhận filter, giơ một ngón tay trong vùng giữa camera và giữ 3 giây để bắt đầu chụp.
-- AI tự khóa khi lượt chụp bắt đầu; nút bắt đầu thủ công luôn được giữ làm phương án dự phòng.
-- Nút xác nhận đổi thành nút bắt đầu chụp.
-- Camera ở bên trái, ảnh vừa chụp tự lấp vào lưới bên phải.
-- Tự động chụp đủ cả lượt mà không có nút hủy giữa chừng.
-- Bản 6 khung dùng tỷ lệ dọc 2:3 với lưới 2 cột × 3 hàng.
-- Có 2 mẫu khung thành phẩm: CLB SAOV và Computer Science.
-- Mẫu Computer Science hỗ trợ cả 4/6 ảnh; tiêu đề, tên sự kiện, mô tả, tên ngành và năm đều chỉnh sửa được.
-- Mỗi lượt chụp tự tạo một folder trong `captures`, lưu từng ảnh `photo-01.jpg`... và ảnh ghép `final.png`.
-- Màn hình kết quả xác nhận trạng thái lưu, cho phép thử lưu `final.png` lại và mở thẳng folder của lượt chụp.
-- Nút **Tải PNG** vẫn được giữ để lưu thêm ảnh final vào vị trí khác do người dùng chọn.
-
-Ví dụ kết quả của một lượt chụp:
+Each session is saved in its own folder:
 
 ```text
 captures/
@@ -75,12 +56,35 @@ captures/
     └── final.png
 ```
 
-Thư viện `html2canvas` đã được lưu trong `vendor/`, font dùng bộ font hệ thống và ảnh minh họa nằm trong project. Luồng chụp, ghép và lưu ảnh vì vậy không phụ thuộc Internet.
+The `captures/` folder is excluded from Git so personal photos are not uploaded to the repository.
 
-MediaPipe Tasks Vision, WASM và model Gesture Recognizer cũng được lưu trong `mediapipe/`. Nhận diện cử chỉ chạy trực tiếp trong trình duyệt trên máy người dùng; khung hình camera không được gửi lên dịch vụ bên ngoài.
+## Add a custom frame
 
-## Thêm frame PNG có sẵn
+Place a PNG in the folder that matches its number of photo slots. For example, put a six-photo frame in `frames/6-photo/my-frame.png`, then press **Quét lại** on the frame selection screen.
 
-Chỉ cần chép một file PNG vào đúng thư mục theo số ảnh, ví dụ frame 6 ảnh đặt tại `frames/6-photo/ten-frame.png`, sau đó bấm **Quét lại** ở màn hình chọn frame.
+The PNG needs one transparent area for each photo slot and no other large transparent regions. Its file name becomes the frame name shown in the app.
 
-Tên file được dùng làm tên hiển thị. PNG phải có đúng số ô ảnh trong suốt tương ứng và không có vùng trong suốt lớn khác. Hai frame hệ thống CLB SAOV và Computer Science vẫn nằm riêng trong code và tiếp tục chỉnh sửa được chữ.
+## Project structure
+
+```text
+index.html                    page structure and interface
+css/booth.css                 visual design and responsive layout
+js/app.js                     camera, capture, frame and save flow
+js/gesture-control.js         gesture detection and three-second hold
+js/system-frames.js           built-in frame definitions
+js/ready-frames.js            custom PNG frame loading
+mediapipe/                    MediaPipe library, WASM and gesture model
+frames/                       ready-made PNG frames
+assets/                       project images and branding
+vendor/                       local html2canvas build
+server.mjs                    local server and capture storage
+START-PHOTOBOOTH.cmd          Windows launcher
+```
+
+## Credits
+
+This project includes MediaPipe Tasks Vision under the Apache License 2.0 and html2canvas under the MIT License. See `THIRD_PARTY_NOTICES.md` for details.
+
+## Tiếng Việt
+
+Đây là photobooth chạy trên trình duyệt mà mình tự làm cho booth của CLB trong sự kiện Trung thu ở trường. Khoảng 100 người đã sử dụng trong sự kiện. Người dùng chọn số ảnh, thời gian giữa các lần chụp và filter, sau đó giơ một ngón tay trong vùng hướng dẫn khoảng ba giây để bắt đầu. Hệ thống tự chụp, ghép khung và lưu từng ảnh cùng file `final.png` vào một thư mục riêng.
