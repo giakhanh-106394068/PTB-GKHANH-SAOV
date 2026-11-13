@@ -32,17 +32,33 @@ Gesture recognition runs in the browser on the user's machine. Camera frames are
 
 ## Run locally
 
-You need Node.js, a webcam and a modern browser.
+You need Node.js, a webcam and a modern browser (Chrome or Edge recommended).
 
-On Windows, double-click `START-PHOTOBOOTH.cmd`. It starts the local server on an available port and opens the photobooth in the browser.
+**1. Download the project**
 
-You can also start the server manually:
+```bash
+git clone https://github.com/giakhanh-106394068/PTB-GKHANH-SAOV.git
+cd PTB-GKHANH-SAOV
+```
+
+**2. Start the photobooth**
+
+- Windows: double-click `START-PHOTOBOOTH.cmd`. It starts the local server on an available port and opens the photobooth in your browser.
+- Any system: run the server manually.
 
 ```bash
 node server.mjs
 ```
 
-Then open `http://127.0.0.1:4174`. Running on localhost allows the browser to request camera access reliably.
+Then open `http://127.0.0.1:4174` in your browser. The `.cmd` file only works on Windows. On macOS or Linux, use `node server.mjs`.
+
+**3. Allow camera access**
+
+Allow camera access when the browser asks. Running on localhost lets the browser request camera permission reliably.
+
+**4. Stop the server**
+
+Press `Ctrl+C` in the terminal window where the server is running.
 
 Each session is saved in its own folder:
 
@@ -60,7 +76,7 @@ The `captures/` folder is excluded from Git so personal photos are not uploaded 
 
 ## Add a custom frame
 
-Place a PNG in the folder that matches its number of photo slots. For example, put a six-photo frame in `frames/6-photo/my-frame.png`, then press **Quét lại** on the frame selection screen.
+Place a PNG in the folder that matches its number of photo slots. For example, put a six-photo frame in `frames/6-photo/my-frame.png`, then press **Quét lại** (Rescan) on the frame selection screen.
 
 The PNG needs one transparent area for each photo slot and no other large transparent regions. Its file name becomes the frame name shown in the app.
 
